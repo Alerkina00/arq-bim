@@ -51,11 +51,12 @@
             border-radius: 16px;
             padding: 2rem;
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            margin-bottom: 2rem;
         }
         .dropzone {
             border: 3px dashed var(--azul-claro);
             border-radius: 12px;
-            padding: 4rem 2rem;
+            padding: 3rem 2rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
@@ -96,19 +97,32 @@
         }
         .btn-primary:hover:not(:disabled) {
             background: #c25a95;
+            transform: translateY(-1px);
         }
         .btn-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
         .btn-danger {
             background: #ef4444;
             color: white;
             padding: 6px 12px;
             font-size: 0.8rem;
+            width: auto;
         }
         .btn-danger:hover {
             background: #dc2626;
+        }
+        .btn-secondary {
+            background: var(--border);
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            width: auto;
+        }
+        .btn-secondary:hover {
+            background: #475569;
         }
         .file-list {
             margin-top: 1rem;
@@ -130,8 +144,8 @@
             color: #f87171;
             font-weight: bold;
         }
-        .project-list {
-            margin-top: 2rem;
+        .file-tag .remove:hover {
+            color: #ef4444;
         }
         .project-item {
             background: #1a2433;
@@ -165,6 +179,7 @@
             padding: 4px 12px;
             border-radius: 4px;
             background: rgba(74, 158, 255, 0.1);
+            font-size: 0.8rem;
         }
         .project-item .actions a:hover {
             background: rgba(74, 158, 255, 0.2);
@@ -178,14 +193,10 @@
             margin-top: 0.5rem;
             display: none;
         }
-        .loading {
-            display: inline-block;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        .status-success { color: #4ade80; }
+        .status-error { color: #ef4444; }
+        .loading-text { color: #94a3b8; }
+        .empty-text { color: #94a3b8; text-align: center; padding: 2rem; }
     </style>
 </head>
 <body>
@@ -195,6 +206,9 @@
             <div class="main login-card">
                 <div class="card">
                     <h2 style="margin-bottom:1rem;">🔐 Login</h2>
+                    <p style="color:#94a3b8; margin-bottom:1rem; font-size:0.9rem;">
+                        Usuário: <strong>admin</strong> | Senha: <strong>admin123</strong>
+                    </p>
                     <input type="text" id="loginUser" placeholder="Usuário" value="admin">
                     <input type="password" id="loginPass" placeholder="Senha" value="admin123">
                     <div class="error" id="loginError">Credenciais inválidas</div>
@@ -217,14 +231,14 @@
             <div class="main">
                 <div class="card">
                     <h2>📤 Novo Projeto</h2>
-                    <input type="text" id="name" placeholder="Nome do Projeto">
-                    <textarea id="desc" placeholder="Descrição (opcional)"></textarea>
+                    <input type="text" id="projectName" placeholder="Nome do Projeto">
+                    <textarea id="projectDesc" placeholder="Descrição (opcional)"></textarea>
 
                     <div class="dropzone" id="dropzone">
                         <p style="font-size:1.1rem; margin-bottom:8px;">📁 Arraste GLB, GLTF, OBJ ou FBX aqui</p>
                         <p>ou <strong>clique para selecionar</strong></p>
                         <p style="font-size:0.8rem; color:#94a3b8; margin-top:8px;">Máx. 500MB</p>
-                        <input type="file" id="fileInput" style="display:none" accept=".glb,.gltf,.obj,.fbx,.bin,.png,.jpg,.jpeg">
+                        <input type="file" id="fileInput" style="display:none" multiple accept=".glb,.gltf,.obj,.fbx,.bin,.png,.jpg,.jpeg">
                     </div>
 
                     <div class="file-list" id="fileList"></div>
@@ -232,10 +246,10 @@
                     <div id="uploadStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
                 </div>
 
-                <div class="card project-list">
+                <div class="card">
                     <h2>📋 Projetos</h2>
                     <div id="projectsList">
-                        <p style="color:#94a3b8;">Carregando...</p>
+                        <p class="loading-text">Carregando...</p>
                     </div>
                 </div>
             </div>
@@ -243,35 +257,49 @@
     </div>
 
     <script>
-        const API = {
-            async request(endpoint, options = {}) {
-                const token = localStorage.getItem('token');
-                const headers = {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                };
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
-                const response = await fetch(endpoint, {
-                    ...options,
-                    headers
-                });
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    showLogin();
-                    throw new Error('Sessão expirada');
-                }
-                return response;
-            }
-        };
-
+        // ============ Gerenciamento de Autenticação ============
         let selectedFiles = [];
 
-        // Login
-        async function login() {
-            const username = document.getElementById('loginUser').value;
-            const password = document.getElementById('loginPass').value;
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function setToken(token) {
+            if (token) {
+                localStorage.setItem('token', token);
+            } else {
+                localStorage.removeItem('token');
+            }
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const token = getToken();
+            const headers = {
+                ...options.headers
+            };
+            
+            if (token && !(options.body instanceof FormData)) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(endpoint, {
+                ...options,
+                headers
+            });
+
+            if (response.status === 401) {
+                setToken(null);
+                showLogin();
+                throw new Error('Sessão expirada');
+            }
+
+            return response;
+        }
+
+        // ============ Login ============
+        async function handleLogin() {
+            const username = document.getElementById('loginUser').value.trim();
+            const password = document.getElementById('loginPass').value.trim();
             const errorEl = document.getElementById('loginError');
             const btn = document.getElementById('loginBtn');
             
@@ -286,15 +314,17 @@
                     body: JSON.stringify({ username, password })
                 });
 
+                const data = await res.json();
+
                 if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem('token', data.token);
+                    setToken(data.token);
                     showAdmin();
                 } else {
+                    errorEl.textContent = data.error || 'Credenciais inválidas';
                     errorEl.style.display = 'block';
                 }
             } catch (err) {
-                errorEl.textContent = 'Erro de conexão';
+                errorEl.textContent = 'Erro de conexão com o servidor';
                 errorEl.style.display = 'block';
             } finally {
                 btn.textContent = 'Entrar';
@@ -313,29 +343,29 @@
             loadProjects();
         }
 
-        // Logout
+        // ============ Logout ============
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
+            setToken(null);
             showLogin();
         });
 
-        // Verificar token ao carregar
-        if (localStorage.getItem('token')) {
+        // ============ Eventos de Login ============
+        document.getElementById('loginBtn').addEventListener('click', handleLogin);
+        document.getElementById('loginPass').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+        document.getElementById('loginUser').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // ============ Verificar Sessão ============
+        if (getToken()) {
             showAdmin();
         } else {
             showLogin();
         }
 
-        // Login button
-        document.getElementById('loginBtn').addEventListener('click', login);
-        document.getElementById('loginPass').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') login();
-        });
-        document.getElementById('loginUser').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') login();
-        });
-
-        // Upload
+        // ============ Upload ============
         const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('fileInput');
         const fileList = document.getElementById('fileList');
@@ -349,6 +379,7 @@
         });
 
         dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        
         dropzone.addEventListener('drop', e => {
             e.preventDefault();
             dropzone.classList.remove('dragover');
@@ -357,10 +388,22 @@
 
         fileInput.addEventListener('change', () => {
             if (fileInput.files.length) handleFiles(fileInput.files);
+            fileInput.value = ''; // Reset para permitir mesmo arquivo novamente
         });
 
         function handleFiles(files) {
-            selectedFiles = Array.from(files);
+            const validExtensions = ['.glb', '.gltf', '.obj', '.fbx', '.bin', '.png', '.jpg', '.jpeg'];
+            const validFiles = Array.from(files).filter(f => {
+                const ext = '.' + f.name.split('.').pop().toLowerCase();
+                return validExtensions.includes(ext);
+            });
+
+            if (validFiles.length === 0) {
+                alert('Por favor, selecione arquivos válidos: GLB, GLTF, OBJ, FBX, BIN, PNG, JPG ou JPEG');
+                return;
+            }
+
+            selectedFiles = validFiles;
             renderFileList();
         }
 
@@ -379,7 +422,7 @@
         };
 
         uploadBtn.addEventListener('click', async () => {
-            const name = document.getElementById('name').value.trim();
+            const name = document.getElementById('projectName').value.trim();
             if (!name) {
                 alert('Digite o nome do projeto');
                 return;
@@ -391,20 +434,21 @@
 
             const form = new FormData();
             form.append('name', name);
-            form.append('description', document.getElementById('desc').value.trim());
+            form.append('description', document.getElementById('projectDesc').value.trim());
 
             selectedFiles.forEach(file => form.append('files', file));
 
             uploadBtn.textContent = '⏳ Enviando...';
             uploadBtn.disabled = true;
-            document.getElementById('uploadStatus').textContent = '';
+            const statusEl = document.getElementById('uploadStatus');
+            statusEl.className = '';
+            statusEl.textContent = 'Enviando arquivos...';
 
             try {
-                const token = localStorage.getItem('token');
                 const res = await fetch('/api/projects', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${getToken()}`
                     },
                     body: form
                 });
@@ -412,54 +456,53 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    document.getElementById('uploadStatus').style.color = '#4ade80';
-                    document.getElementById('uploadStatus').textContent = '✅ ' + data.message;
+                    statusEl.className = 'status-success';
+                    statusEl.textContent = '✅ ' + (data.message || 'Projeto enviado com sucesso!');
                     selectedFiles = [];
                     renderFileList();
-                    document.getElementById('name').value = '';
-                    document.getElementById('desc').value = '';
+                    document.getElementById('projectName').value = '';
+                    document.getElementById('projectDesc').value = '';
                     loadProjects();
                 } else {
-                    document.getElementById('uploadStatus').style.color = '#ef4444';
-                    document.getElementById('uploadStatus').textContent = '❌ ' + (data.error || 'Falha no upload');
+                    statusEl.className = 'status-error';
+                    statusEl.textContent = '❌ ' + (data.error || 'Falha no upload');
                 }
             } catch (err) {
-                document.getElementById('uploadStatus').style.color = '#ef4444';
-                document.getElementById('uploadStatus').textContent = '❌ Erro de conexão';
+                statusEl.className = 'status-error';
+                statusEl.textContent = '❌ Erro de conexão com o servidor';
             } finally {
                 uploadBtn.textContent = 'Enviar Projeto';
                 uploadBtn.disabled = false;
             }
         });
 
-        // Load projects
+        // ============ Listar Projetos ============
         async function loadProjects() {
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch('/api/projects', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+            const container = document.getElementById('projectsList');
+            container.innerHTML = '<p class="loading-text">Carregando...</p>';
 
-                if (!res.ok) throw new Error('Erro ao carregar projetos');
+            try {
+                const res = await apiFetch('/api/projects');
+                
+                if (!res.ok) {
+                    throw new Error('Erro ao carregar projetos');
+                }
 
                 const projects = await res.json();
-                const container = document.getElementById('projectsList');
 
-                if (!projects.length) {
-                    container.innerHTML = '<p style="color:#94a3b8;">Nenhum projeto cadastrado</p>';
+                if (!projects || projects.length === 0) {
+                    container.innerHTML = '<p class="empty-text">Nenhum projeto cadastrado ainda</p>';
                     return;
                 }
 
                 container.innerHTML = projects.map(p => `
                     <div class="project-item">
                         <div class="info">
-                            <div class="name">${p.name}</div>
+                            <div class="name">${escapeHtml(p.name)}</div>
                             <div class="meta">
-                                ${p.description || 'Sem descrição'} • 
-                                ${p.file_name} • 
-                                ${new Date(p.created_at).toLocaleDateString()}
+                                ${p.description ? escapeHtml(p.description) : 'Sem descrição'} • 
+                                ${escapeHtml(p.file_name)} • 
+                                ${formatDate(p.created_at)}
                             </div>
                         </div>
                         <div class="actions">
@@ -469,7 +512,57 @@
                     </div>
                 `).join('');
             } catch (err) {
-                document.getElementById('projectsList').innerHTML = 
-                    `<p style="color:#ef4444;">❌ Erro ao carregar projetos</p>`;
+                container.innerHTML = `<p class="status-error">❌ ${err.message}</p>`;
             }
-       
+        }
+
+        // ============ Deletar Projeto ============
+        window.deleteProject = async function(slug) {
+            if (!confirm('Tem certeza que deseja excluir este projeto?')) return;
+
+            try {
+                const res = await apiFetch(`/api/projects/${slug}`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    loadProjects();
+                } else {
+                    const data = await res.json();
+                    alert('Erro ao excluir: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch (err) {
+                alert('Erro de conexão ao excluir projeto');
+            }
+        };
+
+        // ============ Utilitários ============
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            try {
+                return new Date(dateStr).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        // ============ Recarregar projetos a cada 30 segundos ============
+        setInterval(() => {
+            if (getToken()) {
+                loadProjects();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
