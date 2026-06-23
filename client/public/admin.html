@@ -3,73 +3,196 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arq BIM - Admin</title>
+  <title>Arq BIM - Painel Administrativo</title>
   <style>
     :root {
-      --pink: #e07ab0;
-      --blue: #4a9eff;
-      --bg: #0a0e1a;
-      --surface: #111830;
+      --rosa: #e07ab0;
+      --rosa-claro: #f8c1d9;
+      --azul: #4a9eff;
+      --azul-claro: #a5d6ff;
+      --bg: #0f172a;
+      --surface: #1e2937;
     }
-    body { background: var(--bg); color: #e8ecf5; font-family: system-ui; margin:0; }
-    header { background: var(--surface); padding: 1rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid #334466; }
-    .logo { font-size: 1.4rem; font-weight: 700; color: white; }
-    .logo span { color: var(--pink); }
-    .main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-    .upload-card, .project-card { background: var(--surface); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #334466; }
-    button { background: var(--pink); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; cursor: pointer; }
-    button:hover { background: #f8a1c9; }
-    .dropzone { border: 2px dashed var(--blue); padding: 2rem; text-align: center; border-radius: 12px; }
-    .project-card { display: flex; gap: 1rem; align-items: center; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: #1e2937;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid #334155;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--rosa);
+    }
+    .main {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+    .dropzone {
+      border: 3px dashed var(--azul-claro);
+      border-radius: 12px;
+      padding: 4rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(74, 158, 255, 0.05);
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--rosa);
+      background: rgba(224, 122, 176, 0.1);
+    }
+    input, button {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    input {
+      width: 100%;
+      background: #334155;
+      color: white;
+      margin-bottom: 1rem;
+    }
+    button {
+      background: var(--rosa);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    button:hover {
+      background: #c25a95;
+    }
+    .file-list {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .file-tag {
+      background: #334155;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
   <header>
-    <div class="logo">Arq <span>BIM</span></div>
-    <h2>Painel Administrativo</h2>
+    <div class="logo">Arq <span style="color:#a5d6ff">BIM</span></div>
+    <h1>Painel Administrativo</h1>
   </header>
+
   <div class="main">
-    <div class="upload-card">
-      <h3>Novo Projeto</h3>
-      <input id="name" placeholder="Nome do projeto" style="width:100%;padding:0.8rem;margin:1rem 0">
-      <div class="dropzone" id="dropzone">Arraste GLB/GLTF/OBJ/FBX ou clique</div>
-      <button id="uploadBtn" style="width:100%">Enviar</button>
+    <div class="card">
+      <h2>Novo Projeto</h2>
+      <input type="text" id="name" placeholder="Nome do Projeto" value="Projeto Teste">
+      <input type="text" id="desc" placeholder="Descrição (opcional)">
+
+      <div class="dropzone" id="dropzone">
+        <p style="font-size:1.1rem; margin-bottom:8px;">📁 Arraste GLB, GLTF, OBJ ou FBX aqui</p>
+        <p>ou <strong>clique para selecionar</strong></p>
+        <input type="file" id="fileInput" style="display:none" accept=".glb,.gltf,.obj,.fbx,.bin,.png,.jpg,.jpeg">
+      </div>
+
+      <div class="file-list" id="fileList"></div>
+      <button id="uploadBtn">Enviar Projeto</button>
     </div>
-    <div id="projects"></div>
   </div>
 
   <script>
-    let token = localStorage.getItem('token');
-    const API = '';
+    let selectedFiles = [];
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const uploadBtn = document.getElementById('uploadBtn');
 
-    async function login() {
-      // Simple demo login for now
-      const res = await fetch('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:'admin', password: 'admin123'})});
-      const data = await res.json();
-      if (data.token) {
-        token = data.token;
-        localStorage.setItem('token', token);
-        loadProjects();
-      }
-    }
+    dropzone.addEventListener('click', () => fileInput.click());
 
-    async function loadProjects() {
-      const res = await fetch('/api/projects', {headers: {Authorization: 'Bearer ' + token}});
-      const projects = await res.json();
-      document.getElementById('projects').innerHTML = projects.map(p => `
-        <div class="project-card">
-          <strong>${p.name}</strong>
-          <a href="/v/${p.slug}" target="_blank">Abrir Viewer</a>
-        </div>
-      `).join('');
-    }
-
-    document.getElementById('uploadBtn').addEventListener('click', async () => {
-      // Upload logic simplified
-      alert('Upload funcional no backend completo!');
+    dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
     });
 
-    login();
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) handleFiles(fileInput.files);
+    });
+
+    function handleFiles(files) {
+      selectedFiles = Array.from(files);
+      renderFileList();
+    }
+
+    function renderFileList() {
+      fileList.innerHTML = selectedFiles.map((f, i) => 
+        `<div class="file-tag">${f.name} <span onclick="removeFile(${i})" style="cursor:pointer;color:#f87171">×</span></div>`
+      ).join('');
+    }
+
+    window.removeFile = function(i) {
+      selectedFiles.splice(i, 1);
+      renderFileList();
+    };
+
+    uploadBtn.addEventListener('click', async () => {
+      const name = document.getElementById('name').value.trim();
+      if (!name) return alert('Digite o nome do projeto');
+      if (selectedFiles.length === 0) return alert('Selecione pelo menos um arquivo');
+
+      const form = new FormData();
+      form.append('name', name);
+      form.append('description', document.getElementById('desc').value);
+
+      selectedFiles.forEach(file => form.append('files', file));
+
+      uploadBtn.textContent = 'Enviando...';
+      uploadBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          body: form
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('✅ Projeto enviado com sucesso!');
+          selectedFiles = [];
+          renderFileList();
+        } else {
+          alert('Erro: ' + (data.error || 'Falha no upload'));
+        }
+      } catch (err) {
+        alert('Erro de conexão');
+      } finally {
+        uploadBtn.textContent = 'Enviar Projeto';
+        uploadBtn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>

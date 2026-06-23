@@ -10,22 +10,26 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Static files
 app.use(express.static(path.join(__dirname, '../client/public')));
 
+// Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
-app.use('/api/proxy', require('./routes/proxy'));
 
-app.get('/v/:slug', (req, res) => res.sendFile(path.join(__dirname, '../client/public/viewer.html')));
+// Pages
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '../client/public/admin.html')));
+app.get('/v/:slug', (req, res) => res.sendFile(path.join(__dirname, '../client/public/viewer.html')));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 async function start() {
-  const { getDb } = require('./services/db');
-  await getDb();
+  await require('./services/db').getDb();
   app.listen(PORT, () => {
-    console.log(`✅ Arq BIM rodando em http://localhost:${PORT}`);
+    console.log(`🚀 Arq BIM rodando em http://localhost:${PORT}`);
+    console.log(`📊 Admin: http://localhost:${PORT}/admin`);
   });
 }
 
