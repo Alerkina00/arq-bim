@@ -3,9 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const USE_R2 = !!(process.env.R2_ENDPOINT && process.env.R2_ACCESS_KEY_ID);
-const UPLOAD_DIR = path.resolve(__dirname, '../../../uploads');
+const UPLOAD_DIR = path.resolve(process.cwd(), 'uploads');
 
-// Garantir que a pasta uploads existe
 if (!USE_R2 && !fs.existsSync(UPLOAD_DIR)) {
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     console.log(`📁 Pasta de uploads criada: ${UPLOAD_DIR}`);
@@ -69,14 +68,12 @@ async function deleteFile(fileKey) {
             Bucket: process.env.R2_BUCKET_NAME,
             Key: fileKey
         }));
-        console.log(`🗑️ Arquivo removido do R2: ${fileKey}`);
         return;
     }
     
     const filePath = path.join(UPLOAD_DIR, fileKey);
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
-        console.log(`🗑️ Arquivo removido localmente: ${filePath}`);
     }
 }
 
