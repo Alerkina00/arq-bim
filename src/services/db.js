@@ -3,12 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-// CORRIGIDO: caminho absoluto correto
+// Caminho absoluto para o banco de dados na raiz
 const DB_PATH = process.env.DB_PATH
-    ? path.resolve(process.env.DB_PATH)
-    : path.resolve(__dirname, '../../data/arq-bim.db');
+    ? path.resolve(process.cwd(), process.env.DB_PATH)
+    : path.resolve(process.cwd(), 'data/arq-bim.db');
 
-// Garantir que a pasta existe
 const dbDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
@@ -55,18 +54,16 @@ async function getDb() {
         );
     `);
 
-    // Verificar e criar admin
+    // Criar admin
     const adminCheck = db.exec("SELECT * FROM users WHERE username = 'admin'");
     let adminExists = adminCheck.length > 0 && adminCheck[0].values.length > 0;
 
     if (!adminExists) {
-        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'ARQBIM2026';
         const hash = bcrypt.hashSync(adminPassword, 10);
         db.run("INSERT INTO users (username, password) VALUES (?, ?)", ['admin', hash]);
         console.log(`✅ Usuário admin criado (senha: ${adminPassword})`);
         saveDb();
-    } else {
-        console.log('✅ Usuário admin já existe');
     }
 
     return db;
@@ -78,16 +75,5 @@ function saveDb() {
         fs.writeFileSync(DB_PATH, Buffer.from(data));
     }
 }
-
-// Salvar automaticamente a cada 5 minutos
-setInterval(() => {
-    if (db) {
-        try {
-            saveDb();
-        } catch (e) {
-            console.error('Erro ao salvar DB:', e);
-        }
-    }
-}, 5 * 60 * 1000);
 
 module.exports = { getDb, saveDb };
