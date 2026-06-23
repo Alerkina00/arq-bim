@@ -1,198 +1,475 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arq BIM - Painel Administrativo</title>
-  <style>
-    :root {
-      --rosa: #e07ab0;
-      --rosa-claro: #f8c1d9;
-      --azul: #4a9eff;
-      --azul-claro: #a5d6ff;
-      --bg: #0f172a;
-      --surface: #1e2937;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: var(--bg);
-      color: #e2e8f0;
-      font-family: system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-    }
-    header {
-      background: #1e2937;
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      border-bottom: 1px solid #334155;
-    }
-    .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--rosa);
-    }
-    .main {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    .card {
-      background: var(--surface);
-      border-radius: 16px;
-      padding: 2rem;
-      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    }
-    .dropzone {
-      border: 3px dashed var(--azul-claro);
-      border-radius: 12px;
-      padding: 4rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s;
-      background: rgba(74, 158, 255, 0.05);
-    }
-    .dropzone:hover, .dropzone.dragover {
-      border-color: var(--rosa);
-      background: rgba(224, 122, 176, 0.1);
-    }
-    input, button {
-      padding: 12px 20px;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
-    }
-    input {
-      width: 100%;
-      background: #334155;
-      color: white;
-      margin-bottom: 1rem;
-    }
-    button {
-      background: var(--rosa);
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 1rem;
-    }
-    button:hover {
-      background: #c25a95;
-    }
-    .file-list {
-      margin-top: 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .file-tag {
-      background: #334155;
-      padding: 6px 12px;
-      border-radius: 9999px;
-      font-size: 0.9rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arq BIM - Painel Administrativo</title>
+    <style>
+        :root {
+            --rosa: #e07ab0;
+            --rosa-claro: #f8c1d9;
+            --azul: #4a9eff;
+            --azul-claro: #a5d6ff;
+            --bg: #0f172a;
+            --surface: #1e2937;
+            --border: #334155;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: #e2e8f0;
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+        }
+        header {
+            background: var(--surface);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--rosa);
+        }
+        .user-info {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .main {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+        .dropzone {
+            border: 3px dashed var(--azul-claro);
+            border-radius: 12px;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(74, 158, 255, 0.05);
+            margin: 1rem 0;
+        }
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--rosa);
+            background: rgba(224, 122, 176, 0.1);
+        }
+        input, textarea {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+            width: 100%;
+            background: #334155;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--rosa);
+            color: white;
+            width: 100%;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #c25a95;
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .file-list {
+            margin-top: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .file-tag {
+            background: #334155;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .file-tag .remove {
+            cursor: pointer;
+            color: #f87171;
+            font-weight: bold;
+        }
+        .project-list {
+            margin-top: 2rem;
+        }
+        .project-item {
+            background: #1a2433;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .project-item .info {
+            flex: 1;
+        }
+        .project-item .info .name {
+            font-weight: 600;
+            color: var(--rosa);
+        }
+        .project-item .info .meta {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .project-item .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .project-item .actions a {
+            color: var(--azul);
+            text-decoration: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            background: rgba(74, 158, 255, 0.1);
+        }
+        .project-item .actions a:hover {
+            background: rgba(74, 158, 255, 0.2);
+        }
+        .login-card {
+            max-width: 400px;
+            margin: 4rem auto;
+        }
+        .login-card .error {
+            color: #ef4444;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="logo">Arq <span style="color:#a5d6ff">BIM</span></div>
-    <h1>Painel Administrativo</h1>
-  </header>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="loginScreen" style="display:none;">
+            <div class="main login-card">
+                <div class="card">
+                    <h2 style="margin-bottom:1rem;">🔐 Login</h2>
+                    <input type="text" id="loginUser" placeholder="Usuário" value="admin">
+                    <input type="password" id="loginPass" placeholder="Senha" value="admin123">
+                    <div class="error" id="loginError">Credenciais inválidas</div>
+                    <button class="btn-primary" id="loginBtn">Entrar</button>
+                </div>
+            </div>
+        </div>
 
-  <div class="main">
-    <div class="card">
-      <h2>Novo Projeto</h2>
-      <input type="text" id="name" placeholder="Nome do Projeto" value="Projeto Teste">
-      <input type="text" id="desc" placeholder="Descrição (opcional)">
+        <!-- Admin Screen -->
+        <div id="adminScreen" style="display:none;">
+            <header>
+                <div class="logo">Arq <span style="color:var(--azul)">BIM</span></div>
+                <h1>Painel Administrativo</h1>
+                <div class="user-info">
+                    <span id="userName">Admin</span>
+                    <button class="btn-danger" id="logoutBtn" style="width:auto;">Sair</button>
+                </div>
+            </header>
 
-      <div class="dropzone" id="dropzone">
-        <p style="font-size:1.1rem; margin-bottom:8px;">📁 Arraste GLB, GLTF, OBJ ou FBX aqui</p>
-        <p>ou <strong>clique para selecionar</strong></p>
-        <input type="file" id="fileInput" style="display:none" accept=".glb,.gltf,.obj,.fbx,.bin,.png,.jpg,.jpeg">
-      </div>
+            <div class="main">
+                <div class="card">
+                    <h2>📤 Novo Projeto</h2>
+                    <input type="text" id="name" placeholder="Nome do Projeto">
+                    <textarea id="desc" placeholder="Descrição (opcional)"></textarea>
 
-      <div class="file-list" id="fileList"></div>
-      <button id="uploadBtn">Enviar Projeto</button>
+                    <div class="dropzone" id="dropzone">
+                        <p style="font-size:1.1rem; margin-bottom:8px;">📁 Arraste GLB, GLTF, OBJ ou FBX aqui</p>
+                        <p>ou <strong>clique para selecionar</strong></p>
+                        <p style="font-size:0.8rem; color:#94a3b8; margin-top:8px;">Máx. 500MB</p>
+                        <input type="file" id="fileInput" style="display:none" accept=".glb,.gltf,.obj,.fbx,.bin,.png,.jpg,.jpeg">
+                    </div>
+
+                    <div class="file-list" id="fileList"></div>
+                    <button class="btn-primary" id="uploadBtn">Enviar Projeto</button>
+                    <div id="uploadStatus" style="margin-top:0.5rem; font-size:0.9rem;"></div>
+                </div>
+
+                <div class="card project-list">
+                    <h2>📋 Projetos</h2>
+                    <div id="projectsList">
+                        <p style="color:#94a3b8;">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    let selectedFiles = [];
-    const dropzone = document.getElementById('dropzone');
-    const fileInput = document.getElementById('fileInput');
-    const fileList = document.getElementById('fileList');
-    const uploadBtn = document.getElementById('uploadBtn');
+    <script>
+        const API = {
+            async request(endpoint, options = {}) {
+                const token = localStorage.getItem('token');
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const response = await fetch(endpoint, {
+                    ...options,
+                    headers
+                });
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    showLogin();
+                    throw new Error('Sessão expirada');
+                }
+                return response;
+            }
+        };
 
-    dropzone.addEventListener('click', () => fileInput.click());
+        let selectedFiles = [];
 
-    dropzone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropzone.classList.add('dragover');
-    });
+        // Login
+        async function login() {
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPass').value;
+            const errorEl = document.getElementById('loginError');
+            const btn = document.getElementById('loginBtn');
+            
+            errorEl.style.display = 'none';
+            btn.textContent = '⏳ Entrando...';
+            btn.disabled = true;
 
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-    dropzone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropzone.classList.remove('dragover');
-      handleFiles(e.dataTransfer.files);
-    });
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
 
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files.length) handleFiles(fileInput.files);
-    });
-
-    function handleFiles(files) {
-      selectedFiles = Array.from(files);
-      renderFileList();
-    }
-
-    function renderFileList() {
-      fileList.innerHTML = selectedFiles.map((f, i) => 
-        `<div class="file-tag">${f.name} <span onclick="removeFile(${i})" style="cursor:pointer;color:#f87171">×</span></div>`
-      ).join('');
-    }
-
-    window.removeFile = function(i) {
-      selectedFiles.splice(i, 1);
-      renderFileList();
-    };
-
-    uploadBtn.addEventListener('click', async () => {
-      const name = document.getElementById('name').value.trim();
-      if (!name) return alert('Digite o nome do projeto');
-      if (selectedFiles.length === 0) return alert('Selecione pelo menos um arquivo');
-
-      const form = new FormData();
-      form.append('name', name);
-      form.append('description', document.getElementById('desc').value);
-
-      selectedFiles.forEach(file => form.append('files', file));
-
-      uploadBtn.textContent = 'Enviando...';
-      uploadBtn.disabled = true;
-
-      try {
-        const res = await fetch('/api/projects', {
-          method: 'POST',
-          body: form
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          alert('✅ Projeto enviado com sucesso!');
-          selectedFiles = [];
-          renderFileList();
-        } else {
-          alert('Erro: ' + (data.error || 'Falha no upload'));
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('token', data.token);
+                    showAdmin();
+                } else {
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Erro de conexão';
+                errorEl.style.display = 'block';
+            } finally {
+                btn.textContent = 'Entrar';
+                btn.disabled = false;
+            }
         }
-      } catch (err) {
-        alert('Erro de conexão');
-      } finally {
-        uploadBtn.textContent = 'Enviar Projeto';
-        uploadBtn.disabled = false;
-      }
-    });
-  </script>
-</body>
-</html>
+
+        function showLogin() {
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('adminScreen').style.display = 'none';
+        }
+
+        function showAdmin() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminScreen').style.display = 'block';
+            loadProjects();
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            showLogin();
+        });
+
+        // Verificar token ao carregar
+        if (localStorage.getItem('token')) {
+            showAdmin();
+        } else {
+            showLogin();
+        }
+
+        // Login button
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('loginPass').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') login();
+        });
+        document.getElementById('loginUser').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        // Upload
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        dropzone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) handleFiles(fileInput.files);
+        });
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files);
+            renderFileList();
+        }
+
+        function renderFileList() {
+            fileList.innerHTML = selectedFiles.map((f, i) => 
+                `<div class="file-tag">
+                    ${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)
+                    <span class="remove" onclick="removeFile(${i})">×</span>
+                </div>`
+            ).join('');
+        }
+
+        window.removeFile = function(i) {
+            selectedFiles.splice(i, 1);
+            renderFileList();
+        };
+
+        uploadBtn.addEventListener('click', async () => {
+            const name = document.getElementById('name').value.trim();
+            if (!name) {
+                alert('Digite o nome do projeto');
+                return;
+            }
+            if (selectedFiles.length === 0) {
+                alert('Selecione pelo menos um arquivo');
+                return;
+            }
+
+            const form = new FormData();
+            form.append('name', name);
+            form.append('description', document.getElementById('desc').value.trim());
+
+            selectedFiles.forEach(file => form.append('files', file));
+
+            uploadBtn.textContent = '⏳ Enviando...';
+            uploadBtn.disabled = true;
+            document.getElementById('uploadStatus').textContent = '';
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: form
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('uploadStatus').style.color = '#4ade80';
+                    document.getElementById('uploadStatus').textContent = '✅ ' + data.message;
+                    selectedFiles = [];
+                    renderFileList();
+                    document.getElementById('name').value = '';
+                    document.getElementById('desc').value = '';
+                    loadProjects();
+                } else {
+                    document.getElementById('uploadStatus').style.color = '#ef4444';
+                    document.getElementById('uploadStatus').textContent = '❌ ' + (data.error || 'Falha no upload');
+                }
+            } catch (err) {
+                document.getElementById('uploadStatus').style.color = '#ef4444';
+                document.getElementById('uploadStatus').textContent = '❌ Erro de conexão';
+            } finally {
+                uploadBtn.textContent = 'Enviar Projeto';
+                uploadBtn.disabled = false;
+            }
+        });
+
+        // Load projects
+        async function loadProjects() {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api/projects', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!res.ok) throw new Error('Erro ao carregar projetos');
+
+                const projects = await res.json();
+                const container = document.getElementById('projectsList');
+
+                if (!projects.length) {
+                    container.innerHTML = '<p style="color:#94a3b8;">Nenhum projeto cadastrado</p>';
+                    return;
+                }
+
+                container.innerHTML = projects.map(p => `
+                    <div class="project-item">
+                        <div class="info">
+                            <div class="name">${p.name}</div>
+                            <div class="meta">
+                                ${p.description || 'Sem descrição'} • 
+                                ${p.file_name} • 
+                                ${new Date(p.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <a href="/v/${p.slug}" target="_blank">👁️ Ver</a>
+                            <button class="btn-danger" onclick="deleteProject('${p.slug}')">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                document.getElementById('projectsList').innerHTML = 
+                    `<p style="color:#ef4444;">❌ Erro ao carregar projetos</p>`;
+            }
+       
