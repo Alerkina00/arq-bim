@@ -25,7 +25,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Arquivos estáticos - corrigido para usar caminho absoluto
+// Arquivos estáticos - servir a pasta public
 app.use(express.static(PUBLIC_DIR));
 
 // Rotas de API
@@ -33,16 +33,23 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/proxy', require('./routes/proxy'));
 
-// Páginas
+// Rota para admin - usando /admin (não /admin.html)
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, 'admin.html'));
 });
 
+// Rota para viewer
 app.get('/v/:slug', (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, 'viewer.html'));
 });
 
+// Rota de saúde
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+// Rota raiz - redirecionar para admin
+app.get('/', (req, res) => {
+    res.redirect('/admin');
+});
 
 async function start() {
     try {
@@ -51,7 +58,8 @@ async function start() {
             console.log(`\n🚀 Arq BIM rodando em http://localhost:${PORT}`);
             console.log(`📊 Admin: http://localhost:${PORT}/admin`);
             console.log(`📁 Banco de dados: ${DATA_DIR}/arq-bim.db`);
-            console.log(`📁 Uploads: ${UPLOAD_DIR}\n`);
+            console.log(`📁 Uploads: ${UPLOAD_DIR}`);
+            console.log(`📁 Public: ${PUBLIC_DIR}\n`);
         });
     } catch (error) {
         console.error('❌ Erro ao iniciar:', error);
