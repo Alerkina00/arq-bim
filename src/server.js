@@ -12,14 +12,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
+// Arquivos estáticos
 app.use(express.static(path.join(__dirname, '../client/public')));
 
-// Routes
+// Rotas de API
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 
-// Pages
+// Fix: rota do proxy registrada — necessária para o viewer carregar o modelo 3D
+app.use('/api/proxy', require('./routes/proxy'));
+
+// Páginas
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '../client/public/admin.html')));
 app.get('/v/:slug', (req, res) => res.sendFile(path.join(__dirname, '../client/public/viewer.html')));
 
