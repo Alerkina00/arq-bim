@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arq BIM - Admin</title>
+  <style>
+    :root {
+      --pink: #e07ab0;
+      --blue: #4a9eff;
+      --bg: #0a0e1a;
+      --surface: #111830;
+    }
+    body { background: var(--bg); color: #e8ecf5; font-family: system-ui; margin:0; }
+    header { background: var(--surface); padding: 1rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid #334466; }
+    .logo { font-size: 1.4rem; font-weight: 700; color: white; }
+    .logo span { color: var(--pink); }
+    .main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+    .upload-card, .project-card { background: var(--surface); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #334466; }
+    button { background: var(--pink); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #f8a1c9; }
+    .dropzone { border: 2px dashed var(--blue); padding: 2rem; text-align: center; border-radius: 12px; }
+    .project-card { display: flex; gap: 1rem; align-items: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Arq <span>BIM</span></div>
+    <h2>Painel Administrativo</h2>
+  </header>
+  <div class="main">
+    <div class="upload-card">
+      <h3>Novo Projeto</h3>
+      <input id="name" placeholder="Nome do projeto" style="width:100%;padding:0.8rem;margin:1rem 0">
+      <div class="dropzone" id="dropzone">Arraste GLB/GLTF/OBJ/FBX ou clique</div>
+      <button id="uploadBtn" style="width:100%">Enviar</button>
+    </div>
+    <div id="projects"></div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem('token');
+    const API = '';
+
+    async function login() {
+      // Simple demo login for now
+      const res = await fetch('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:'admin', password: 'admin123'})});
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        localStorage.setItem('token', token);
+        loadProjects();
+      }
+    }
+
+    async function loadProjects() {
+      const res = await fetch('/api/projects', {headers: {Authorization: 'Bearer ' + token}});
+      const projects = await res.json();
+      document.getElementById('projects').innerHTML = projects.map(p => `
+        <div class="project-card">
+          <strong>${p.name}</strong>
+          <a href="/v/${p.slug}" target="_blank">Abrir Viewer</a>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+      // Upload logic simplified
+      alert('Upload funcional no backend completo!');
+    });
+
+    login();
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Arq BIM Viewer</title>
+  <style>
+    body { margin:0; overflow:hidden; background:#0a0e1a; font-family:system-ui; }
+    canvas { display:block; }
+    #header { position:fixed; top:0; left:0; right:0; background:rgba(10,14,26,0.9); padding:1rem; color:white; z-index:10; display:flex; justify-content:space-between; }
+    .logo { color: #e07ab0; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div class="logo">Arq BIM</div>
+    <div id="title">Carregando modelo...</div>
+  </div>
+  <canvas id="canvas"></canvas>
+
+  <script type="importmap">
+  {"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js"}}
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0e1a);
+    const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas'), antialias:true});
+    renderer.setSize(innerWidth, innerHeight);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    camera.position.set(10, 8, 15);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
+
+    const loader = new GLTFLoader();
+    const slug = location.pathname.split('/').pop();
+    loader.load(`/api/proxy/${slug}`, (gltf) => {
+      scene.add(gltf.scene);
+      document.getElementById('title').textContent = 'Modelo carregado';
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>
