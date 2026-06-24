@@ -1,0 +1,45 @@
+# fly.toml — Arq BIM Viewer
+# Gerado para deploy no Fly.io
+# Documentação: https://fly.io/docs/reference/configuration/
+
+app = "arq-bim"          # ← troque para o nome que você escolher no fly launch
+primary_region = "gru"   # São Paulo, Brasil 🇧🇷
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV    = "production"
+  PORT        = "3000"
+  DB_PATH     = "/data/arq-bim.db"
+
+# Máquina: 1 CPU + 1GB RAM (plano shared-cpu-1x)
+# Para 2GB RAM, mude para: memory = "2048"
+[[vm]]
+  cpu_kind = "shared"
+  cpus     = 1
+  memory   = "1gb"
+
+[http_service]
+  internal_port        = 3000
+  force_https          = true
+  auto_stop_machines   = false   # ← false = sempre ligado (sem cold start)
+  auto_start_machines  = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type       = "requests"
+    hard_limit = 100
+    soft_limit = 80
+
+# Health check — Fly reinicia se o app travar
+[[services.tcp_checks]]
+  interval    = "15s"
+  timeout     = "5s"
+  grace_period = "30s"
+
+# Volume persistente para o banco SQLite
+# Criado manualmente com: fly volumes create arq_bim_data --size 1
+[[mounts]]
+  source      = "arq_bim_data"
+  destination = "/data"
